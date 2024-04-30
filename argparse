@@ -1,0 +1,44 @@
+import argparse
+import scanpy as sc
+import numpy as np
+
+def main(filtered_path, model_path, cfs_path):
+    # Load the data
+    filtered = sc.read_h5ad(filtered_path)
+    CFS = sc.read_h5ad(cfs_path)
+    
+    # Processing as before
+    adata = CFS[CFS.obs['sample'] == 'CFS_Day0'].copy()
+    common_vars = np.intersect1d(adata.var_names, filtered.var_names)
+    adata = adata[:, common_vars].copy()
+    adata.obs = filtered.obs
+
+    # Assuming you want to do something with `model_path` and `adata`
+    print(f"Model path: {model_path}")
+    # Implement any further actions with `adata` or other variables
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process file paths for scRNAseq data analysis.")
+    parser.add_argument('--filtered_path', required=True, help="Path to the filtered dataset.")
+    parser.add_argument('--model_path', required=True, help="Path to the model directory.")
+    parser.add_argument('--cfs_path', required=True, help="Path to the CFS dataset.")
+    
+    args = parser.parse_args()
+    main(args.filtered_path, args.model_path, args.cfs_path)
+
+#!/bin/bash
+#SBATCH --job-name=scRNAseq-analysis
+#SBATCH --output=result.txt
+#SBATCH --ntasks=1
+#SBATCH --time=1:00:00
+#SBATCH --mem=4GB
+
+module load python/3.8  # Adjust based on your environment
+
+# Define paths
+filtered_path="/path/to/dataset_CFS_d0_indi_analysed_light.h5ad"
+model_path="/path/to/scGPT_human"
+cfs_path="/path/to/CFS_all_days_rawcount.h5ad"
+
+# Run the Python script with the paths as arguments
+python script.py --filtered_path "$filtered_path" --model_path "$model_path" --cfs_path "$cfs_path"
